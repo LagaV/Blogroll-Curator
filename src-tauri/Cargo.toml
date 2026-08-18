@@ -3,6 +3,7 @@ name = "blogroll-curator"
 version = "0.2.0"
 description = "A private workspace for curating feed collections"
 authors = ["Blogroll Curator"]
+license = "MIT"
 edition = "2021"
 
 [lib]

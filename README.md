@@ -50,7 +50,7 @@ Bibliothek, Historie und Metadaten verbleiben lokal. Netzwerkzugriffe erfolgen n
 
 ### Lizenz
 
-Für dieses Repository wurde noch keine Open-Source-Lizenz festgelegt. Bis eine Lizenz ergänzt wird, gelten die üblichen urheberrechtlichen Einschränkungen.
+Blogroll Curator wird unter der [MIT-Lizenz](LICENSE) veröffentlicht.
 
 ## English
 
@@ -100,4 +100,4 @@ The library, history, and metadata remain local. Network requests occur only whe
 
 ### License
 
-No open-source license has been selected for this repository yet. Standard copyright restrictions apply until a license is added.
+Blogroll Curator is released under the [MIT License](LICENSE).
