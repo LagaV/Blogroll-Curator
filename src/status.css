@@ -1,0 +1,56 @@
+.reachability-tag {
+  padding: 3px 5px;
+  border: 1px solid #111;
+  border-radius: 1px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.reachability-tag.reachable { color: #155b2c; border-color: #155b2c; }
+.reachability-tag.unreachable { color: #b20f20; border-color: #b20f20; }
+.language-pill { font-size: 9px; font-weight: 700; letter-spacing: .06em; color: #111; }
+.availability { padding: 16px 0; border-bottom: 1px solid #c9c9c5; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.availability > div { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.availability > div > span:last-child { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.availability strong { font-size: 12px; }
+.availability small { color: #686868; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+.status-dot { width: 8px; height: 8px; margin-top: 3px; flex: none; border-radius: 50%; background: #888; }
+.status-dot.ok { background: #16813a; }
+.status-dot.bad { background: #e21b2d; }
+.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.feed-logo {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid #c9c9c5;
+  background: #fff;
+  object-fit: contain;
+}
+
+.feed-logo-large {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid #111;
+  background: #fff;
+  object-fit: contain;
+}
+
+.export-control { position: relative; }
+.export-popover { position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; width: 320px; padding: 16px; border: 1px solid #111; background: #fff; box-shadow: 0 8px 24px #0002; }
+.export-popover-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #111; }
+.export-popover-heading > button { border: 0; background: transparent; cursor: pointer; }
+.export-popover fieldset { margin: 16px 0; padding: 0; border: 0; }
+.export-popover legend { margin-bottom: 8px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.export-popover fieldset label { min-height: 32px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #dededb; font-size: 12px; }
+.export-popover fieldset label span { flex: 1; }
+.export-popover fieldset label b { font-variant-numeric: tabular-nums; }
+.export-category-option { display: flex; align-items: flex-start; gap: 8px; padding: 12px 0; border-top: 1px solid #111; border-bottom: 1px solid #111; }
+.export-category-option span { display: flex; flex-direction: column; gap: 3px; }
+.export-category-option strong { font-size: 12px; }
+.export-category-option small { color: #686868; font-size: 10px; }
+.export-warning { color: #b20f20; font-size: 11px; }
+.export-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 16px; }

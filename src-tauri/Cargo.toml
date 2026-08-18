@@ -1,0 +1,21 @@
+[package]
+name = "blogroll-curator"
+version = "0.2.0"
+description = "A private workspace for curating feed collections"
+authors = ["Blogroll Curator"]
+edition = "2021"
+
+[lib]
+name = "feed_curator_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+quick-xml = "0.41"
+regex = "1"

@@ -1,0 +1,58 @@
+.category {
+  border-bottom: 1px solid #e5e2da;
+}
+
+.category-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  width: 100%;
+  height: 38px;
+  border: 0;
+  border-bottom: 1px solid #e9e6df;
+  background: #f7f5f0;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #62665e;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-heading:hover { background: #f1eee7; }
+.category-heading span {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.category-heading b {
+  font-size: 10px;
+  background: #e5e1d7;
+  border-radius: 10px;
+  padding: 2px 7px;
+}
+.category-heading svg { flex: none; }
+
+.category-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-tools span { font-size: 12px; color: #73766d; }
+.category-tools button {
+  border: 0;
+  background: transparent;
+  color: #315f48;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px;
+  cursor: pointer;
+}
+.category-tools button:hover { text-decoration: underline; }
