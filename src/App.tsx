@@ -124,7 +124,7 @@ export function App() {
 
   async function syncGReader() {
     if (!greader) return; const operations = greaderPlan(library.feeds); if (!operations.length || !window.confirm(`${operations.length} ${language === "de" ? "Änderungen am Server anwenden?" : "changes apply to server?"}`)) return;
-    try { await invoke("greader_apply", { ...greader, operations }); await loadGReader(); } catch (cause) { setError(String(cause)); }
+    try { await invoke("greader_apply", { ...greader, operations }); const subscriptions = await invoke<GReaderSubscription[]>("greader_load", greader); setLibrary((current) => mergeGReader(subscriptions, current)); } catch (cause) { setError(String(cause)); }
   }
 
   function toggleExportLanguage(value: string) {
