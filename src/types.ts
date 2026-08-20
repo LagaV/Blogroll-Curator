@@ -16,6 +16,7 @@ export type Feed = {
   firstSeenAt: string;
   lastSeenAt: string;
   isNew: boolean;
+  greader?: { subscriptionId: string; categories: string[]; deleted?: boolean };
 };
 
 export type Library = { feeds: Feed[]; lastImportAt?: string; importName?: string };

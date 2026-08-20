@@ -10,6 +10,15 @@ struct FeedCheck {
 
 const GENERIC_RSS_LOGO: &str = "urn:blogroll:generic-rss";
 
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GReaderSubscription { id: String, title: String, url: String, html_url: Option<String>, icon_url: Option<String>, categories: Vec<GReaderCategory> }
+#[derive(serde::Serialize, serde::Deserialize)]
+struct GReaderCategory { id: String, label: Option<String> }
+#[derive(serde::Deserialize)] struct GReaderList { subscriptions: Vec<GReaderSubscription> }
+#[derive(serde::Deserialize)] #[serde(rename_all = "camelCase")]
+struct GReaderOperation { subscription_id: String, action: String, destination: Option<String>, #[serde(default)] remove_categories: Vec<String> }
+
 #[derive(Default)]
 struct FeedMetadata {
     logo: Option<String>,
@@ -29,6 +38,41 @@ fn validated_http_url(value: &str) -> Result<reqwest::Url, String> {
         return Err("URLs with embedded credentials are not supported".into());
     }
     Ok(url)
+}
+
+fn greader_url(base: &str, path: &str) -> Result<reqwest::Url, String> {
+    let base = validated_http_url(base)?;
+    reqwest::Url::parse(&format!("{}/", base.as_str().trim_end_matches('/'))).map_err(|_| "Invalid GReader API URL".to_string())?.join(path).map_err(|_| "Invalid GReader API path".to_string())
+}
+
+async fn greader_login(client: &reqwest::Client, base: &str, username: &str, password: &str) -> Result<String, String> {
+    let response = client.post(greader_url(base, "accounts/ClientLogin")?).form(&[("Email", username), ("Passwd", password)]).send().await.map_err(|e| e.to_string())?;
+    if !response.status().is_success() { return Err(format!("GReader login failed: HTTP {}", response.status())); }
+    response.text().await.map_err(|e| e.to_string())?.lines().find_map(|line| line.strip_prefix("Auth=").map(str::to_owned)).ok_or_else(|| "GReader login returned no Auth token".into())
+}
+
+#[tauri::command]
+async fn greader_load(base_url: String, username: String, password: String) -> Result<Vec<GReaderSubscription>, String> {
+    let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(20)).redirect(reqwest::redirect::Policy::limited(8)).build().map_err(|e| e.to_string())?;
+    let auth = greader_login(&client, &base_url, &username, &password).await?;
+    let response = client.get(greader_url(&base_url, "reader/api/0/subscription/list?output=json")?).header("Authorization", format!("GoogleLogin auth={auth}")).send().await.map_err(|e| e.to_string())?;
+    if !response.status().is_success() { return Err(format!("Subscription list failed: HTTP {}", response.status())); }
+    Ok(response.json::<GReaderList>().await.map_err(|e| e.to_string())?.subscriptions)
+}
+
+#[tauri::command]
+async fn greader_apply(base_url: String, username: String, password: String, operations: Vec<GReaderOperation>) -> Result<usize, String> {
+    let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(20)).redirect(reqwest::redirect::Policy::limited(8)).build().map_err(|e| e.to_string())?;
+    let auth = greader_login(&client, &base_url, &username, &password).await?;
+    let token = client.get(greader_url(&base_url, "reader/api/0/token")?).header("Authorization", format!("GoogleLogin auth={auth}")).send().await.map_err(|e| e.to_string())?.text().await.map_err(|e| e.to_string())?;
+    for operation in &operations {
+        let mut form = vec![("T".to_string(), token.trim().to_string()), ("ac".into(), operation.action.clone()), ("s".into(), operation.subscription_id.clone())];
+        if let Some(destination) = &operation.destination { form.push(("a".into(), format!("user/-/label/{destination}"))); }
+        for category in &operation.remove_categories { form.push(("r".into(), category.clone())); }
+        let response = client.post(greader_url(&base_url, "reader/api/0/subscription/edit")?).header("Authorization", format!("GoogleLogin auth={auth}")).form(&form).send().await.map_err(|e| e.to_string())?;
+        if !response.status().is_success() { return Err(format!("Sync failed for {}: HTTP {}", operation.subscription_id, response.status())); }
+    }
+    Ok(operations.len())
 }
 
 fn resolved_url(value: &str, base_url: &reqwest::Url) -> Option<String> {
@@ -233,7 +277,7 @@ async fn check_feed(url: String, html_url: Option<String>) -> FeedCheck {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![check_feed])
+        .invoke_handler(tauri::generate_handler![check_feed, greader_load, greader_apply])
         .build(tauri::generate_context!())
         .expect("error while building Blogroll Curator");
 

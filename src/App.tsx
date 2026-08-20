@@ -6,6 +6,7 @@ import { loadLibrary, saveLibrary } from "./storage";
 import type { Feed, Library } from "./types";
 import { translate, type Language } from "./i18n";
 import packageInfo from "../package.json";
+import { greaderPlan, mergeGReader, type GReaderSubscription } from "./greader";
 
 type Filter = "all" | "new" | "selected";
 type FeedCheckResult = { reachable: boolean; status?: number; message: string; logoUrl: string; language?: string };
@@ -33,6 +34,7 @@ export function App() {
   const [error, setError] = useState("");
   const [checking, setChecking] = useState<Set<string>>(() => new Set());
   const [exportOpen, setExportOpen] = useState(false);
+  const [greader, setGreader] = useState<{ baseUrl: string; username: string; password: string } | null>(null);
   const [includeCategories, setIncludeCategories] = useState(() => preference("export-categories") !== "false");
   const [excludedExportLanguages, setExcludedExportLanguages] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(preference("export-excluded-languages") || "[]")); }
@@ -113,6 +115,18 @@ export function App() {
     }
   }
 
+  async function loadGReader() {
+    const baseUrl = window.prompt(language === "de" ? "GReader API-Adresse" : "GReader API URL", preference("greader-url") || "")?.trim(); if (!baseUrl) return;
+    const username = window.prompt(language === "de" ? "Benutzername" : "Username", preference("greader-user") || "")?.trim(); if (!username) return;
+    const password = window.prompt(language === "de" ? "API-Passwort (wird nicht gespeichert)" : "API password (not stored)") || ""; if (!password) return;
+    try { const subscriptions = await invoke<GReaderSubscription[]>("greader_load", { baseUrl, username, password }); const next = mergeGReader(subscriptions, library); setLibrary(next); setActiveId(next.feeds[0]?.id ?? null); setGreader({ baseUrl, username, password }); localStorage.setItem("blogroll-greader-url", baseUrl); localStorage.setItem("blogroll-greader-user", username); setError(""); } catch (cause) { setError(String(cause)); }
+  }
+
+  async function syncGReader() {
+    if (!greader) return; const operations = greaderPlan(library.feeds); if (!operations.length || !window.confirm(`${operations.length} ${language === "de" ? "Änderungen am Server anwenden?" : "changes apply to server?"}`)) return;
+    try { await invoke("greader_apply", { ...greader, operations }); await loadGReader(); } catch (cause) { setError(String(cause)); }
+  }
+
   function toggleExportLanguage(value: string) {
     setExcludedExportLanguages((current) => {
       const next = new Set(current);
@@ -141,6 +155,8 @@ export function App() {
     <header className="topbar">
       <div className="brand"><span className="brand-mark">BC</span><div><strong>Blogroll Curator</strong><small>{library.importName ?? t("localLibrary")}</small></div></div>
       <div className="top-actions">
+        <button className="button secondary" onClick={loadGReader}>GReader</button>
+        {greader && <button className="button secondary" disabled={!greaderPlan(library.feeds).length} onClick={syncGReader}>{language === "de" ? "Synchronisieren" : "Sync"} ({greaderPlan(library.feeds).length})</button>}
         <button className="button secondary" onClick={() => input.current?.click()}><FileUp size={16}/> {t("importOpml")}</button>
         <button className="button secondary" disabled={checking.size > 0} onClick={checkAll}><RefreshCw className={checking.size ? "spin" : ""} size={16}/> {checking.size ? `${checking.size} ${t("checking")}` : t("checkFeeds")}</button>
         <div className="export-control">
@@ -195,6 +211,7 @@ export function App() {
           <div className="inspector-heading"><img className="feed-icon feed-logo-large" src={logoSrc(active.logoUrl)} alt="" onError={(event) => { event.currentTarget.src = "/rss-logo.svg"; }}/><div><p className="eyebrow">{t("feedDetails")}</p><h2>{active.title}</h2></div></div>
           <label className="toggle-row"><span><strong>{t("includeExport")}</strong><small>{t("remembered")}</small></span><button className={`switch ${active.selected ? "on" : ""}`} onClick={() => updateFeed(active.id, { selected: !active.selected })}><span/></button></label>
           <div className="availability"><div><span className={`status-dot ${active.reachable === true ? "ok" : active.reachable === false ? "bad" : "unknown"}`}/><span><strong>{active.reachable === true ? t("feedAccessible") : active.reachable === false ? t("feedUnavailable") : t("notChecked")}</strong><small>{active.checkMessage || (active.checkedAt ? new Date(active.checkedAt).toLocaleString(language) : "")}</small></span></div><button className="button secondary" disabled={checking.has(active.id)} onClick={() => checkOne(active)}><RefreshCw className={checking.has(active.id) ? "spin" : ""} size={14}/> {t("check")}</button></div>
+          {active.greader && <><div className="field"><label>{language === "de" ? "GReader-Kategorie" : "GReader category"}</label><input value={active.folder} onChange={(event) => updateFeed(active.id, { folder: event.target.value })}/></div><label className="toggle-row"><span><strong>{language === "de" ? "Vom Server löschen" : "Delete from server"}</strong><small>{language === "de" ? "Erst bei Synchronisierung" : "Only when syncing"}</small></span><button className={`switch ${active.greader.deleted ? "on" : ""}`} onClick={() => updateFeed(active.id, { greader: { ...active.greader!, deleted: !active.greader!.deleted } })}><span/></button></label></>}
           <div className="field"><label>{t("countryCode")} <small>{t("optional")}</small></label><input maxLength={2} placeholder={t("countryExample")} value={active.country} onChange={(event) => updateFeed(active.id, { country: event.target.value.toUpperCase().replace(/[^A-Z]/g, "") })}/><span>{t("countryHelp")}</span></div>
           <div className="field"><label>{t("feedLanguage")} <small>{t("optional")}</small></label><input maxLength={8} placeholder={t("languageExample")} value={active.language} onChange={(event) => updateFeed(active.id, { language: event.target.value.toLowerCase().replace(/[^a-z-]/g, "") })}/><span>{t("languageHelp")}</span></div>
           <div className="field"><label>{t("personalComment")} <small>{t("optional")}</small></label><textarea rows={5} placeholder={t("commentPlaceholder")} value={active.comment} onChange={(event) => updateFeed(active.id, { comment: event.target.value })}/></div>

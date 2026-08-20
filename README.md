@@ -9,6 +9,8 @@ Blogroll Curator ist eine lokale Desktop-App zum Prüfen, Annotieren und Kuratie
 ### Funktionen
 
 - OPML-Import per Dateiauswahl oder Drag-and-drop
+- Import über Google-Reader-kompatible APIs (FreshRSS/Miniflux)
+- Explizite Rücksynchronisierung von Kategorieverschiebungen und vorgemerkten Löschungen
 - Kategorien mit Ein-/Ausklappen
 - Persistente Auswahl-, Kommentar- und Länderinformationen
 - Prüfung der Feed-Erreichbarkeit
@@ -59,6 +61,8 @@ Blogroll Curator is a local desktop application for checking, annotating, and cu
 ### Features
 
 - OPML import via file picker or drag and drop
+- Import through Google Reader compatible APIs (FreshRSS/Miniflux)
+- Explicit reverse sync of category moves and deletions marked for sync
 - Collapsible categories
 - Persistent selection, comments, and country metadata
 - Feed availability checks
